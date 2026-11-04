@@ -103,6 +103,23 @@ Each phase ends with passing tests. Phases 1–3 need no LLM and no API key.
 
 *Tests:* one test per rule, including the *03:30 stretch & fold* case from the proposal.
 
+*As built (6–8):*
+- `validate_request` collects **all** problems into one `GuardrailError` (rule
+  `invalid_input` if several), so the LLM can fix everything in one step. Also rejects
+  bake times more than 14 days ahead. `check_user_text` strips control characters and
+  rejects empty or > 2000-character input.
+- Sleep violations tell the LLM how far the step would have to move ("4 h 35 min
+  earlier or 3 h 30 min later"). Steps ending at or after the bake time (preheat, bake)
+  are exempt: a late pizza night is the user's choice. `too_soon` proposes the earliest
+  possible bake time (rounded up to the quarter hour).
+- Output: `collect_facts(values)` walks all tool args/results (numbers, clock times, step
+  durations, total plan length); `check_summary_numbers(summary, facts)` accepts a number
+  only if it is a correct rounding at its written precision ("2 g" ok for 1.9 g, "600 g"
+  not for 610 g). Handles German formats (1,9 g · 1.025 g · 19.00 Uhr) and kg/h/min
+  conversions. Bare numbers without a unit are ignored.
+- Items 9–11 (loop limits, calendar gate, scope prompt) live in the agent loop and the
+  registry, so they are implemented and tested in phase 4.
+
 ### Phase 4 – Agent
 
 12. **`offline pipeline`** (`plan_offline`): fixed order with a simple retry strategy
@@ -180,6 +197,6 @@ this is a heuristic (target ±25 %), not a lab model.
 - [x] Scaffold
 - [x] Phase 1 – baker's math, yeast model (calibrated), water temperature + tests
 - [x] Phase 2 – timeline + `.ics`
-- [ ] Phase 3 – guardrails
+- [x] Phase 3 – guardrails (input, schedule, output; loop-level ones in phase 4)
 - [ ] Phase 4 – agent
 - [ ] Phase 5 – CLI, README, evaluation, submission

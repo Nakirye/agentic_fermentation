@@ -15,6 +15,8 @@ BALL_WEIGHT_G_RANGE = (180, 350)
 SALT_PCT_RANGE = (2.0, 3.5)
 ROOM_TEMP_C_RANGE = (10.0, 35.0)
 FRIDGE_TEMP_C_RANGE = (1.0, 8.0)
+MAX_PLANNING_HORIZON_DAYS = 14  # longest sensible cold retard is ~5 days
+MAX_USER_TEXT_CHARS = 2000
 
 # Upper hydration limit per flour; above this the result is no longer a workable dough.
 MAX_HYDRATION_PCT: dict[FlourType, float] = {
