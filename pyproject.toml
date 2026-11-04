@@ -1,0 +1,27 @@
+[project]
+name = "fermentation-agent"
+version = "0.1.0"
+description = "Reverse-engineering fermentation planner: an LLM agent that schedules pizza dough backwards from bake time."
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.10,<3",
+    "python-dotenv>=1,<2",
+]
+
+[project.optional-dependencies]
+llm = ["openai>=2,<3"]
+dev = ["pytest>=8,<10"]
+
+[project.scripts]
+fermentation-agent = "cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = { find = { include = ["fermentation_agent*"] } }
+py-modules = ["cli"]

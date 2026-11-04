@@ -1,0 +1,41 @@
+{
+  "_comment": "Reference doughs for calibrating the yeast model. fresh_yeast_pct is relative to flour. Values are typical figures, not yet backed by a citation: replace each 'source' with a real reference (e.g. a published yeast table) before submission.",
+  "doughs": [
+    {
+      "name": "direct, 6 h room",
+      "phases": [{"name": "bulk", "temp_c": 24, "hours": 2}, {"name": "final proof", "temp_c": 24, "hours": 4}],
+      "fresh_yeast_pct": 0.5,
+      "source": "typical value - verify"
+    },
+    {
+      "name": "direct, 8 h room",
+      "phases": [{"name": "bulk", "temp_c": 22, "hours": 3}, {"name": "final proof", "temp_c": 22, "hours": 5}],
+      "fresh_yeast_pct": 0.25,
+      "source": "typical value - verify"
+    },
+    {
+      "name": "direct, 12 h cool room",
+      "phases": [{"name": "bulk", "temp_c": 20, "hours": 6}, {"name": "final proof", "temp_c": 20, "hours": 6}],
+      "fresh_yeast_pct": 0.15,
+      "source": "typical value - verify"
+    },
+    {
+      "name": "24 h cold retard",
+      "phases": [{"name": "bulk", "temp_c": 22, "hours": 1}, {"name": "cold retard", "temp_c": 4, "hours": 24}, {"name": "final proof", "temp_c": 22, "hours": 4}],
+      "fresh_yeast_pct": 0.4,
+      "source": "typical value - verify"
+    },
+    {
+      "name": "48 h cold retard",
+      "phases": [{"name": "bulk", "temp_c": 22, "hours": 1}, {"name": "cold retard", "temp_c": 4, "hours": 48}, {"name": "final proof", "temp_c": 22, "hours": 4}],
+      "fresh_yeast_pct": 0.25,
+      "source": "typical value - verify"
+    },
+    {
+      "name": "72 h cold retard",
+      "phases": [{"name": "bulk", "temp_c": 22, "hours": 1}, {"name": "cold retard", "temp_c": 4, "hours": 72}, {"name": "final proof", "temp_c": 22, "hours": 4}],
+      "fresh_yeast_pct": 0.15,
+      "source": "typical value - verify"
+    }
+  ]
+}
