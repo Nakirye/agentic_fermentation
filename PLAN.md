@@ -69,12 +69,18 @@ Each phase ends with passing tests. Phases 1–3 need no LLM and no API key.
    the stretch & folds as active 5-min steps) ← knead (active) ← autolyse (passive) ← mix (active).
    Use aware datetimes in `Europe/Vienna`. DST: compute in UTC and convert, test across
    the last-Sunday-of-October switch.
-   *Tests:* last step ends at target; steps contiguous; total duration = Σ phases + fixed steps.
+   *As built:* `target_time` = bake **starts**. Balling defaults to before the last phase
+   (`ball_before_phase` moves it, e.g. before the cold retard). "Put in / take out of
+   fridge" are active steps at the start/end of each cold stretch, so balling is always at
+   room temperature. Invalid plans (< 2 phases, folds not fitting) raise `GuardrailError`
+   with a hint for the LLM. Step names are unique (needed for UIDs).
 5. **`create_calendar_events`**: hand-written RFC 5545 (no dependency): `VCALENDAR` +
    one `VEVENT` per step, `UID = sha1(target_time + step name)@fermentation-agent`,
-   `DTSTART;TZID=Europe/Vienna`, `VALARM` 10 min before active steps. Line folding at 75 octets.
-   *Tests:* parse back with a tiny parser; stable UIDs across runs; imports into Google
-   Calendar / Thunderbird (manual check, screenshot for README).
+   `VALARM` 10 min before active steps. Line folding at 75 octets.
+   *As built:* times in UTC (`…Z`) instead of `TZID`, so no `VTIMEZONE` block is needed.
+   Passive steps are `TRANSP:TRANSPARENT` (don't block the calendar). Optional `notes`
+   (ingredients) go into the first event. Verified with the `icalendar` library.
+   *Open:* manual import into Google Calendar / Thunderbird, screenshot for README.
 
 ### Phase 3 – Guardrails
 
@@ -173,7 +179,7 @@ this is a heuristic (target ±25 %), not a lab model.
 
 - [x] Scaffold
 - [x] Phase 1 – baker's math, yeast model (calibrated), water temperature + tests
-- [ ] Phase 2 – timeline + `.ics`
+- [x] Phase 2 – timeline + `.ics`
 - [ ] Phase 3 – guardrails
 - [ ] Phase 4 – agent
 - [ ] Phase 5 – CLI, README, evaluation, submission

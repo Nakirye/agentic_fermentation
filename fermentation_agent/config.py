@@ -30,6 +30,14 @@ DOUGH_WASTE_PCT = 2.5  # dough left on bowl and hands
 FRICTION_FACTOR_C: dict[Mixing, float] = {Mixing.HAND: 2.0, Mixing.STAND_MIXER: 8.0}
 TARGET_DOUGH_TEMP_C = 23.0
 
+# --- Timeline step durations (minutes) --------------------------------------
+MIX_MIN = 5
+BALLING_MIN = 15
+STRETCH_FOLD_MIN = 5
+FRIDGE_MOVE_MIN = 5
+BAKE_MIN = 15
+FRIDGE_MAX_TEMP_C = 10.0  # phases at or below this count as "in the fridge"
+
 # --- Yeast model ------------------------------------------------------------
 # rate(T) relative to REFERENCE_TEMP_C, with a steeper Q10 below Q10_BREAK_C.
 # pct_fresh = YEAST_K * equivalent_hours ** -YEAST_EXPONENT
