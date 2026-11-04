@@ -63,3 +63,5 @@ MIN_LEAD_TIME_MIN = 15  # first step must start at least this long after "now"
 # --- Agent loop guardrails --------------------------------------------------
 MAX_AGENT_TURNS = 12
 MAX_SCHEDULE_RETRIES = 3
+MAX_SUMMARY_RETRIES = 1  # then the template summary is used
+MAX_SUMMARY_CHARS = 3000

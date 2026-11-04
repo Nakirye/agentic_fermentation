@@ -32,7 +32,8 @@ def collect_facts(values: Iterable[Any]) -> Facts:
     """Walk tool arguments and results recursively and collect every number and clock time.
 
     Durations of anything with start/end (timeline steps) and the total plan length are
-    added too, because a summary naturally mentions them.
+    added too, because a summary naturally mentions them. Numbers inside tool texts
+    (warnings, step descriptions) count as facts as well – tool output is trusted.
     """
     facts = Facts()
 
@@ -45,6 +46,9 @@ def collect_facts(values: Iterable[Any]) -> Facts:
             facts.numbers.add(float(value))
         elif isinstance(value, datetime):
             facts.times.add(f"{value:%H:%M}")
+        elif isinstance(value, str):
+            facts.times.update(_clock_times(value))
+            facts.numbers.update(value for value, _ in _quantities(value))
         elif isinstance(value, dict):
             if isinstance(value.get("start"), datetime) and isinstance(value.get("end"), datetime):
                 _add_duration(facts, value["end"] - value["start"])
@@ -91,6 +95,31 @@ def _matches(value: float, tolerance: float, facts: Facts) -> bool:
     return any(abs(value - fact) <= tolerance for fact in facts.numbers)
 
 
+def _clock_times(text: str) -> list[str]:
+    times = []
+    for match in _TIME.finditer(text):
+        hour, minute = (match.group(1), match.group(2)) if match.group(1) else (match.group(3), match.group(4))
+        times.append(f"{int(hour):02d}:{minute}")
+    return times
+
+
+def _quantity_matches(text: str) -> list[tuple[str, str, str]]:
+    """(snippet, number, unit) for every number with a unit; clock times are skipped."""
+    text = _TIME.sub(" ", text)
+    return [(m.group(0).strip(), m.group(1), m.group(2).lower().replace(" ", "")) for m in _QUANTITY.finditer(text)]
+
+
+def _quantities(text: str) -> list[tuple[float, str]]:
+    """Numbers in trusted tool text, read with '.' as decimal point (tools write English)."""
+    found = []
+    for _, number, unit in _quantity_matches(text):
+        readings = _candidates(number)
+        if readings:
+            value = readings[0][0]
+            found.append((value * 1000 if unit == "kg" else value, unit))
+    return found
+
+
 def check_summary_numbers(summary: str, facts: Facts) -> list[str]:
     """Every quantity and clock time in the summary must match a fact.
 
@@ -98,15 +127,10 @@ def check_summary_numbers(summary: str, facts: Facts) -> list[str]:
     it is written with ("2 g" matches 1.9, "600 g" does not match 610).
     Returns the offending snippets (empty list = summary is consistent).
     """
-    mismatches = []
-    for match in _TIME.finditer(summary):
-        hour, minute = (match.group(1), match.group(2)) if match.group(1) else (match.group(3), match.group(4))
-        if f"{int(hour):02d}:{minute}" not in facts.times:
-            mismatches.append(match.group(0))
-    text = _TIME.sub(" ", summary)  # clock times must not be read as quantities
+    mismatches = [match.group(0) for match, time in zip(_TIME.finditer(summary), _clock_times(summary))
+                  if time not in facts.times]
 
-    for match in _QUANTITY.finditer(text):
-        number, unit = match.group(1), match.group(2).lower().replace(" ", "")
+    for snippet, number, unit in _quantity_matches(summary):
         ok = False
         for value, tolerance in _candidates(number):
             if unit == "kg":
@@ -119,5 +143,5 @@ def check_summary_numbers(summary: str, facts: Facts) -> list[str]:
             if ok:
                 break
         if not ok:
-            mismatches.append(match.group(0).strip())
+            mismatches.append(snippet)
     return mismatches

@@ -142,11 +142,34 @@ Each phase ends with passing tests. Phases 1–3 need no LLM and no API key.
     retries exhausted → clean failure; hallucinated number in summary → caught;
     off-topic prompt → no tool calls.
 
+*As built:*
+- **Registry** (`agent/registry.py`): six tools – `submit_request` (input guardrail,
+  returns the defaults used), `build_timeline` (runs `validate_schedule` itself; a
+  violation is returned as `schedule_violation` error and counts against the retry
+  budget), `calculate_yeast_percentage`, `calculate_water_temperature`,
+  `calculate_bakers_math`, `finish_plan(summary)`. Args models forbid extra fields;
+  naive times are read as Europe/Vienna; `$ref`s are inlined in the schemas.
+- **Session** (`agent/session.py`): stores every result. The dispatcher never raises:
+  unknown tool, bad JSON, schema errors and guardrail errors become error results.
+  `finish_plan` is the final gate: **cross-tool consistency** (yeast computed for the
+  timeline's phases, bakers' math with the request's values and that yeast %, water for
+  the request's mixing method) + output guardrail. One retry for a bad summary, then the
+  deterministic template summary (`agent/summary.py`) is used. Only facts of the accepted
+  plan count – numbers from discarded attempts are rejected.
+- **Loop** (`agent/loop.py`, `FermentationAgent.send`): multi-turn, so the agent can ask
+  (e.g. for the mixing method) and continue with the answer. `MAX_AGENT_TURNS` per message;
+  `.ics` only after `confirm(result)`. One conversation = one plan.
+- **Offline** (`pipeline.py`): search over cold retards 24 h ± 1 h steps (8–48 h), then
+  same-day doughs; final calls go through the same dispatcher, so trace and guardrails
+  are identical.
+- **Adapter**: tested with a fake SDK and the real SDK over mock HTTP. **Not yet run
+  against the live API** (needs `OPENAI_API_KEY`) – that is phase 5, step 19.
+
 ### Phase 5 – CLI, docs, submission
 
 17. **CLI**: LLM mode (prompt string), `--offline` with flags, `--now` for reproducible
     demos, `--yes`, `--trace` to print the tool-call log, `-o out/plan.ics`.
-18. **README** (German or English, see open decisions): process description, why an agent,
+18. **README** (English): process description, why an agent,
     tool list, guardrail table, setup, example run with trace, limitations.
 19. **Evaluation**: 3–5 live scenarios with the real LLM, logged (prompt, trace, result),
     incl. one that triggers the sleep guardrail and one that triggers the hydration guardrail.
@@ -198,5 +221,5 @@ this is a heuristic (target ±25 %), not a lab model.
 - [x] Phase 1 – baker's math, yeast model (calibrated), water temperature + tests
 - [x] Phase 2 – timeline + `.ics`
 - [x] Phase 3 – guardrails (input, schedule, output; loop-level ones in phase 4)
-- [ ] Phase 4 – agent
+- [x] Phase 4 – agent (live LLM run pending, needs API key)
 - [ ] Phase 5 – CLI, README, evaluation, submission

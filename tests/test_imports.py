@@ -16,6 +16,9 @@ MODULES = [
     "fermentation_agent.agent.loop",
     "fermentation_agent.agent.registry",
     "fermentation_agent.agent.openai_client",
+    "fermentation_agent.agent.session",
+    "fermentation_agent.agent.summary",
+    "fermentation_agent.agent.prompts",
     "fermentation_agent.pipeline",
     "cli",
 ]
