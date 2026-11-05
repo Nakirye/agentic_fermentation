@@ -17,6 +17,7 @@
             pydantic
             pytest
             openai
+            httpx # used directly by the mock-HTTP adapter test
             python-dotenv
           ]);
         in
