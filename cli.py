@@ -34,8 +34,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("-y", "--yes", action="store_true", help="write the calendar file without asking")
     parser.add_argument("--trace", action="store_true", help="print every tool call and its result")
     parser.add_argument("-o", "--output", type=Path, default=Path("out/plan.ics"), help="calendar file (default: %(default)s)")
-    parser.add_argument("--model", default=os.environ.get("FERMENTATION_MODEL", DEFAULT_MODEL),
-                        help="OpenAI model (default: $FERMENTATION_MODEL or %(default)s)")
+    parser.add_argument("--model", help=f"model name (default: $FERMENTATION_MODEL or {DEFAULT_MODEL})")
+    parser.add_argument("--base-url", help="OpenAI-compatible server, e.g. http://localhost:11434/v1 for Ollama "
+                                           "(default: $OPENAI_BASE_URL or the OpenAI API)")
 
     offline = parser.add_argument_group("offline mode")
     offline.add_argument("--pizzas", type=int)
@@ -148,15 +149,20 @@ def run_llm(args, now: datetime, display: Display) -> AgentResult:
     from dotenv import load_dotenv
 
     from fermentation_agent.agent.loop import FermentationAgent
-    from fermentation_agent.agent.openai_client import create_openai_client
+    from fermentation_agent.agent.openai_client import OPENAI_BASE_URL, create_openai_client
     from fermentation_agent.agent.prompts import build_instructions
     from fermentation_agent.agent.registry import tool_schemas
 
-    load_dotenv()
+    load_dotenv()  # before reading any setting, so values from .env apply
+    model = args.model or os.environ.get("FERMENTATION_MODEL", "").strip() or DEFAULT_MODEL
+    base_url = args.base_url or os.environ.get("OPENAI_BASE_URL", "").strip() or OPENAI_BASE_URL
     api_key = os.environ.get("OPENAI_API_KEY", "").strip()
     if not api_key:
-        sys.exit("OPENAI_API_KEY is not set. Put it into .env (see .env.example) or use --offline.")
-    client = create_openai_client(api_key, args.model, build_instructions(now), tool_schemas())
+        if base_url == OPENAI_BASE_URL:
+            sys.exit("OPENAI_API_KEY is not set. Put it into .env (see .env.example), "
+                     "set OPENAI_BASE_URL for a local server, or use --offline.")
+        api_key = "local"  # local servers such as Ollama ignore the key, but the SDK needs one
+    client = create_openai_client(api_key, model, build_instructions(now), tool_schemas(), base_url)
     agent = FermentationAgent(client, now, make_confirm(args.yes, display), args.output)
 
     text = args.prompt or ask("What do you want to bake? ")

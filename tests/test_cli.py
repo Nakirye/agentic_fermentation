@@ -45,3 +45,41 @@ def test_llm_mode_requires_key(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: False)
     assert "OPENAI_API_KEY" in run(monkeypatch, "4 Pizzen")
+
+
+class StopBeforeNetwork(Exception):
+    pass
+
+
+def capture_client(monkeypatch, env):
+    """Run LLM mode up to client creation and return the factory arguments."""
+    for name in ("OPENAI_API_KEY", "OPENAI_BASE_URL", "FERMENTATION_MODEL"):
+        monkeypatch.delenv(name, raising=False)
+    for name, value in env.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: False)
+    captured = {}
+
+    def fake_factory(api_key, model, instructions, tools, base_url):
+        captured.update(api_key=api_key, model=model, base_url=base_url)
+        raise StopBeforeNetwork
+
+    monkeypatch.setattr("fermentation_agent.agent.openai_client.create_openai_client", fake_factory)
+    return captured
+
+
+def test_llm_mode_local_server_needs_no_key(monkeypatch):
+    captured = capture_client(monkeypatch, {"OPENAI_BASE_URL": "http://localhost:11434/v1",
+                                            "FERMENTATION_MODEL": "llama3.2:3b"})
+    monkeypatch.setattr(sys, "argv", ["cli.py", "4 Pizzen"])
+    with pytest.raises(StopBeforeNetwork):
+        cli.main()
+    assert captured == {"api_key": "local", "model": "llama3.2:3b", "base_url": "http://localhost:11434/v1"}
+
+
+def test_llm_mode_flags_override_env(monkeypatch):
+    captured = capture_client(monkeypatch, {"OPENAI_API_KEY": "test-only-key", "FERMENTATION_MODEL": "from-env"})
+    monkeypatch.setattr(sys, "argv", ["cli.py", "--model", "qwen3:14b", "--base-url", "http://gpu:11434/v1", "4 Pizzen"])
+    with pytest.raises(StopBeforeNetwork):
+        cli.main()
+    assert captured == {"api_key": "test-only-key", "model": "qwen3:14b", "base_url": "http://gpu:11434/v1"}

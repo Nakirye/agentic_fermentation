@@ -27,6 +27,16 @@ If something is missing (e.g. kneading by hand or with a stand mixer), the agent
 asks and you type the answer. Before writing the calendar file, it shows the plan
 and asks for confirmation. Run `python cli.py` without text to be prompted.
 
+**With a local model (Ollama):** set the server address and a model that supports
+tool calling. No API key needed:
+
+```bash
+OPENAI_BASE_URL=http://localhost:11434/v1 FERMENTATION_MODEL=qwen3:14b python cli.py "Samstag 19:00 vier Pizzen"
+# or: python cli.py --base-url http://localhost:11434/v1 --model qwen3:14b "..."
+```
+
+Small models (under ~8B) often call the tools with wrong values and run out of retries.
+
 **Without an LLM (offline):** pass the values as flags:
 
 ```bash

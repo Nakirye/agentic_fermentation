@@ -125,3 +125,10 @@ def test_installed_sdk_roundtrip_with_mock_http():
         assert client.respond(None, (ToolResult("call_1", {"ok": True}),)).answer == "Plan fertig."
     assert requests[0]["tools"][0]["name"] == "submit_request"
     assert requests[1]["input"][-1]["call_id"] == "call_1"
+
+
+def test_sdk_configuration_for_local_server(monkeypatch):
+    captured = {}
+    monkeypatch.setattr("openai.OpenAI", lambda **kwargs: captured.update(kwargs) or object())
+    create_openai_client("local", "llama3.2:3b", "I", [], base_url="http://localhost:11434/v1")
+    assert captured["base_url"] == "http://localhost:11434/v1" and captured["timeout"] == 300

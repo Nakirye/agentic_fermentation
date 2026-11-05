@@ -71,9 +71,18 @@ class OpenAIModelClient:
         return ModelTurn(calls=tuple(calls), answer=response.output_text)
 
 
-def create_openai_client(api_key: str, model_name: str, instructions: str, tools: list[dict]) -> OpenAIModelClient:
-    """Construct lazily so offline mode and tests do not need the SDK."""
+OPENAI_BASE_URL = "https://api.openai.com/v1"
+
+
+def create_openai_client(api_key: str, model_name: str, instructions: str, tools: list[dict],
+                         base_url: str = OPENAI_BASE_URL) -> OpenAIModelClient:
+    """Construct lazily so offline mode and tests do not need the SDK.
+
+    `base_url` can point to any server with an OpenAI-compatible Responses API, e.g. Ollama
+    (`http://localhost:11434/v1`). Local models load and generate slower, hence the longer timeout.
+    """
     from openai import OpenAI
 
-    sdk = OpenAI(api_key=api_key, timeout=30.0, max_retries=2, base_url="https://api.openai.com/v1")
+    timeout = 30.0 if base_url == OPENAI_BASE_URL else 300.0
+    sdk = OpenAI(api_key=api_key, timeout=timeout, max_retries=2, base_url=base_url)
     return OpenAIModelClient(sdk, model_name, instructions, tools)
