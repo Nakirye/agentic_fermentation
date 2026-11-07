@@ -35,8 +35,6 @@ OPENAI_BASE_URL=http://localhost:11434/v1 FERMENTATION_MODEL=qwen3:14b python cl
 # or: python cli.py --base-url http://localhost:11434/v1 --model qwen3:14b "..."
 ```
 
-Small models (under ~8B) often call the tools with wrong values and run out of retries.
-
 **Without an LLM (offline):** pass the values as flags:
 
 ```bash
@@ -60,9 +58,10 @@ Times without an offset are read as Europe/Vienna.
 
 ### Calendar
 
-Import `out/plan.ics` into Google Calendar, Thunderbird, Apple Calendar or Outlook.
+Import `out/plan.ics` into your preferred calendar application.
 Steps where you have to do something get a reminder 10 minutes before. Resting
-phases are shown as "free". Importing a plan for the same bake time again
+phases are shown as "free". 
+Importing a plan for the same bake time again
 updates the events instead of duplicating them.
 
 ## Tests
