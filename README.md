@@ -8,8 +8,8 @@ automatically.
 ## Setup
 
 ```bash
-direnv allow                 # once; loads the Nix dev shell on every cd
-# without direnv: nix develop
+python3 -m venv .venv && source .venv/bin/activate   # Python 3.12+
+pip install -e ".[llm,dev]"
 cp .env.example .env         # then set OPENAI_API_KEY=sk-...
 ```
 
